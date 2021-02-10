@@ -39,7 +39,7 @@ function NewsCard({ card, isLoggedIn, isTypeSavedCards }) {
   })
 
   return (
-    <div className="card">
+    <li className="card">
       <img className="card__image" src={card.image} alt={card.keyword} />
       <button
         className={buttonClasses}
@@ -53,7 +53,7 @@ function NewsCard({ card, isLoggedIn, isTypeSavedCards }) {
         <p className="card__text" ref={textFieldRef}>{card.text}</p>
       </div>
       <p className="card__source">{card.source}</p>
-    </div >
+    </li >
   );
 }
 export default NewsCard;
