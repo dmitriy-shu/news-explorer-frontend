@@ -1,0 +1,15 @@
+.popup__redirect-message_type_info {
+  width: 83%;
+  text-align: left;
+  font-size: 20px;
+  padding: 10px 0 10px 0;
+}
+
+.popup__redirect-button_type_info {
+  font-size: 18px;
+  padding-bottom: 30px;
+}
+
+.popup__text_type_info {
+  padding-top: 10px;
+}

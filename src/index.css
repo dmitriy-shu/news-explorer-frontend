@@ -1,0 +1,46 @@
+body {
+  background-color: grey;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.content {
+  padding-left: 107px;
+  padding-right: 107px;
+}
+
+@media(max-width: 1000px) {
+  .content {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+}
+
+@media(max-width: 700px) {
+  .content {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+@import url("./vendor/normalize.css");
+@import url("./fonts/fonts.css");
+@import url("./components/Header/header.css");
+@import url("./components/Main/main.css");
+@import url("./components/SearchForm/searchform.css");
+@import url("./components/Navigation/navigation.css");
+@import url("./components/About/about.css");
+@import url("./components/Footer/footer.css");
+@import url("./components/NewsCard/newsCard.css");
+@import url("./components/NewsCardList/newsCardList.css");
+@import url("./components/PopupWithForm/popupWithForm.css");
+@import url("./components/SavedNewsHeader/savedNewsHeader.css");
+@import url("./components/NotFoundBox/notFoundBox.css");
+@import url("./components/Preloader/preloader.css");
+@import url("./components/PopupInfo/popupInfo.css");
