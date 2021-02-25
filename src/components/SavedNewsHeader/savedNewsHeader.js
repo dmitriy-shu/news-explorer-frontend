@@ -1,11 +1,10 @@
 import React from 'react';
-import tempArticles from '../../constants/tempArticles.js';
 import CurrentUserContext from '../../contexts/CurrentUserContext.js';
 
-function SavedNewsHeader({ isLoggedIn, isTypeSavedCards }) {
+function SavedNewsHeader({ cardsArray }) {
   const user = React.useContext(CurrentUserContext);
   // создаем из массива карточек массив ключевых слов и сортируем
-  const arrayOfKeywords = tempArticles.map((item) => item.keyword).sort();
+  const arrayOfKeywords = cardsArray.map((item) => item.keyword).sort();
   // создаем из массива ключевых слов массив с объектами вида{keyword: слово, number: 5}
   let num;
   let current = 0;
@@ -32,7 +31,7 @@ function SavedNewsHeader({ isLoggedIn, isTypeSavedCards }) {
     }
     return 0;
   });
-  console.log(arrayOfObjKeywords);
+
   // конструируем фразу в зависимости от количества ключевых слов
   let phraseStart = '';
   let phraseSpan = '';
@@ -57,15 +56,7 @@ function SavedNewsHeader({ isLoggedIn, isTypeSavedCards }) {
   }
 
 
-  // const [numberOfCards, setNumberOfCards] = React.useState(3);
 
-  // const increaseNumberOfCards = () => {
-  //   setNumberOfCards(Math.min(numberOfCards + 3, tempArticles.length));
-  // }
-  // const arrayToShow = tempArticles.slice(0, numberOfCards);
-
-  // const classNameListButton =
-  //   `list__button ${arrayToShow.length === tempArticles.length && 'list__button_invisible'} `;
 
   return (
     <div className="sn-header">
@@ -75,4 +66,5 @@ function SavedNewsHeader({ isLoggedIn, isTypeSavedCards }) {
     </div>
   );
 }
+
 export default SavedNewsHeader;

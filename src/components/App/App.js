@@ -15,9 +15,12 @@ import SavedNews from '../SavedNews/savedNews.js';
 import NotFoundBox from '../NotFoundBox/notFoundBox.js';
 import Preloader from '../Preloader/preloader.js';
 import ProtectedRoute from '../ProtectedRoute/protectedRoute.js';
+import search from '../../utils/newsApi.js';
+import convertNewsObj from '../../utils/convertNewsObj';
+import { register, login, checkToken, getArticles, addArticle, deleteArticle } from '../../utils/mainApi.js';
 
 function App() {
-  const [currentUser, setCurrentUser] = React.useState({ name: 'Грета', email: 'greta@yandex.ru' });
+  const [currentUser, setCurrentUser] = React.useState({ name: '', email: '' });
   const history = useHistory();
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [screenWidth, setScreenWidth] = React.useState(1440);
@@ -25,31 +28,79 @@ function App() {
   const [showRegister, setShowRegister] = React.useState(false);
   const [showInfo, setShowInfo] = React.useState(false);
   const [showPreloader, setShowPreloader] = React.useState(false);
-  const [isSomethingFound, setIsSomethingFound] = React.useState(true);
+  const [isSomethingFound, setIsSomethingFound] = React.useState(false);
   const [hasUserPressedSearchOnce, setHasUserPressedSearchOnce] = React.useState(false);
-  const [errorText, setErrorText] = React.useState('Это текст ошибки с сервера');
+  const [errorText, setErrorText] = React.useState('');
+  const [news, setNews] = React.useState([]);
+  const [savedNews, setSavedNews] = React.useState([]);
 
   document.addEventListener('keyup', (evt) => {
     if (evt.code === 'Escape') {
       closeAllPopups();
     }
   })
+
+  React.useEffect(() => {
+    const token = localStorage.getItem('jwt');
+    // тут пока затык с открытием модального окна логина при редиректе неавторизованного
+    // пользователя из saved-news (почему то перезагружается страница, а не редирект происходит)
+    // history.listen((location) => {
+    //   if (history.location.state) {  //тут в нашем случае state или null или какой то
+    //     setShowLogin(true);
+    //   }
+    // })
+    if (token) {
+      checkToken(token)
+        .then((res) => {
+          setCurrentUser({ name: res.data.name, email: res.data.email });
+          setIsLoggedIn(true);
+          getArticles(token)
+            .then((res) => {
+              setSavedNews(res.data);
+            })
+            .catch((err) => {
+              console.log(err);
+            })
+        })
+        .catch((err) => {
+          console.log(err);
+        })
+    }
+  }, [])
+
   React.useEffect(() => {
     setScreenWidth(window.innerWidth);
+    setNews(JSON.parse(localStorage.getItem('news')) || []);
+    if (news.length > 0) {
+      setIsSomethingFound(true);
+    }
     window.addEventListener('resize', () => {
       setScreenWidth(window.innerWidth);
     })
-  }, []);
+  }, [news.length]);
 
+  function refreshNewsInLocalStorage() {
+    localStorage.setItem('news', JSON.stringify(news));
+  }
 
-  function handleSubmitSearch(evt) {
+  function handleSubmitSearch(evt, keyWord) {
     evt.preventDefault();
     setShowPreloader(true);
-    setTimeout(() => {
-      setIsSomethingFound(Math.random() > .5);
-      setHasUserPressedSearchOnce(true);
-      setShowPreloader(false);
-    }, 1000)
+    search(keyWord)
+      .then((res) => {
+        const articlesNewArray = res.articles.map(item => convertNewsObj(item, keyWord));
+        localStorage.setItem('news', JSON.stringify(articlesNewArray));
+        setNews(articlesNewArray);
+        setShowPreloader(false);
+        if (res.articles.length === 0) {
+          setIsSomethingFound(false);
+        }
+        setHasUserPressedSearchOnce(true);
+      })
+      .catch((err) => {
+        console.log(err);
+        setShowPreloader(false);
+      })
 
   }
 
@@ -60,10 +111,12 @@ function App() {
   function openLoginPopup() {
     setShowLogin(true);
   }
+
   function closeAllPopups() {
     setShowLogin(false);
     setShowRegister(false);
     setShowInfo(false);
+    setErrorText('');
   }
 
   function redirectToLogin() {
@@ -76,32 +129,118 @@ function App() {
     openRegisterPopup();
   }
 
-  function handleRegister(evt) {
-    evt.preventDefault();
-    // логика регистрации пользователя
-    let rand = Math.floor(Math.random() * 10);
-    if (rand > 5) {
-      closeAllPopups();
-      setShowInfo(true);
-    } else {
-      setErrorText('Регистр. если случ.число  =' + rand + '=  окажется больше 5');
-    }
+  // логика регистрации пользователя
+  function handleRegister(data) {
+    console.log(data);
+    register(data)
+      .then((res) => {
+        closeAllPopups();
+        setShowInfo(true);
+      })
+      .catch((err) => {
+        err.json()
+          .then((err) => {
+            console.log(`Ошибка: ${err.message}`);
+            setErrorText(`Ошибка: ${err.message}`);
+          })
+          .catch((err) => {
+            console.log('Error object could not be parsed...');
+          })
+      })
   }
 
-  function handleLogin(evt) {
-    evt.preventDefault();
-    // логика авторизации
-    setCurrentUser(Math.random() > .5 ? { name: 'Саша' } : { name: 'Таня' });
-    console.log('ki-Login');
-    closeAllPopups();
-    setIsLoggedIn(true);
+  // логика авторизации
+  function handleLogin(data) {
+    login(data)
+      .then((res) => {
+        localStorage.setItem('jwt', res.token);
+        getArticles(res.token)
+          .then((res) => {
+            setSavedNews(res.data);
+          })
+          .catch((err) => {
+            console.log(err);
+          })
+        return (res.token);
+      })
+      .then((res) => {
+        checkToken(res)
+          .then((res) => {
+            setCurrentUser({ name: res.data.name, email: res.data.email });
+            setIsLoggedIn(true);
+            closeAllPopups();
+          })
+          .catch((err) => {
+            console.log(err);
+            setErrorText(err.message);
+          })
+      })
+      .catch((err) => {
+        console.log(err);
+        if (err.status) {
+          err.json()
+            .then((err) => {
+              console.log(`Ошибка: ${err.message}`);
+              setErrorText(`Ошибка: ${err.message}`);
+            })
+            .catch((err) => {
+              console.log('Error object could not be parsed...');
+            })
+        } else {
+          setErrorText('Что то пошло не так...');
+        }
+      })
   }
 
+  // логика выхода 
   function handleLogout() {
-    // логика выхода 
-    console.log('ki-Logout');
+    localStorage.setItem('jwt', '');
+    setCurrentUser({ name: '', email: '' });
     setIsLoggedIn(false);
     history.push('/');
+  }
+
+  // добавление карточки
+  function handleAddCard(card) {
+    const token = localStorage.getItem('jwt');
+    const cardToAdd = Object.assign({}, card);
+
+    delete cardToAdd._id;
+    delete cardToAdd.isMarked;
+
+    addArticle(token, cardToAdd)
+      .then((res) => {
+        card.isMarked = true;
+        refreshNewsInLocalStorage();
+        getArticles(token)
+          .then((res) => {
+            setSavedNews(res.data);
+          })
+          .catch((err) => {
+            console.log(err);
+          })
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+  }
+
+  // удаление карточки
+  function handleDeleteCard(card) {
+    const token = localStorage.getItem('jwt');
+    deleteArticle(token, card)
+      .then((res) => {
+        getArticles(token)
+          .then((res) => {
+            setSavedNews(res.data);
+          })
+          .catch((err) => {
+            console.log(err);
+          })
+      })
+      .catch((err) => {
+        console.log(err);
+      })
   }
 
   return (
@@ -114,9 +253,9 @@ function App() {
             isBlackText={false}
             handleClick={isLoggedIn ? handleLogout : openLoginPopup} />
           <Main onSubmit={handleSubmitSearch} />
-          {hasUserPressedSearchOnce &&
+          {(hasUserPressedSearchOnce || news.length > 0) &&
             (isSomethingFound ?
-              <NewsCardList isLoggedIn={isLoggedIn} isTypeSavedCards={false} /> :
+              <NewsCardList isLoggedIn={isLoggedIn} isTypeSavedCards={false} cards={news} onButtonPress={handleAddCard} /> :
               <NotFoundBox />
             )
           }
@@ -127,6 +266,8 @@ function App() {
           screenWidth={screenWidth}
           isLoggedIn={isLoggedIn}
           handleLogout={handleLogout}
+          cards={savedNews}
+          onButtonPress={handleDeleteCard}
           component={SavedNews}
         />
         <Footer screenWidth={screenWidth} />
