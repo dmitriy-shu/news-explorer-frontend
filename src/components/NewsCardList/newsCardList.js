@@ -1,16 +1,20 @@
 import React from 'react';
 import NewsCard from '../NewsCard/newsCard.js';
-import tempArticles from '../../constants/tempArticles.js';
+import { NUMBER_OF_ARTICLES_IN_PACKAGE } from '../../constants/listConst.js';
 
-function NewsCardList({ isLoggedIn, isTypeSavedCards }) {
-  const [numberOfCards, setNumberOfCards] = React.useState(3);
+function NewsCardList({ isLoggedIn, isTypeSavedCards, cards, onButtonPress }) {
+  const [numberOfCards, setNumberOfCards] = React.useState(NUMBER_OF_ARTICLES_IN_PACKAGE);
   const increaseNumberOfCards = () => {
-    setNumberOfCards(Math.min(numberOfCards + 3, tempArticles.length));
+    setNumberOfCards(Math.min(numberOfCards + NUMBER_OF_ARTICLES_IN_PACKAGE, cards.length));
   }
-  const arrayToShow = tempArticles.slice(0, numberOfCards);
+
+  React.useEffect(() => {
+    isTypeSavedCards ? setNumberOfCards(cards.length) : setNumberOfCards(NUMBER_OF_ARTICLES_IN_PACKAGE);
+  }, [cards, isTypeSavedCards])
+  const arrayToShow = cards.slice(0, numberOfCards);
 
   const classNameListButton =
-    `list__button ${arrayToShow.length === tempArticles.length && 'list__button_invisible'}`;
+    `list__button ${arrayToShow.length === cards.length && 'list__button_invisible'}`;
 
   return (
     <div className="list content">
@@ -20,8 +24,9 @@ function NewsCardList({ isLoggedIn, isTypeSavedCards }) {
           <NewsCard
             key={item._id}
             card={item}
-            isLoggedin={isLoggedIn}
+            isLoggedIn={isLoggedIn}
             isTypeSavedCards={isTypeSavedCards}
+            onButtonPress={onButtonPress}
           />
         )}
 
@@ -29,7 +34,6 @@ function NewsCardList({ isLoggedIn, isTypeSavedCards }) {
       <button className={classNameListButton} onClick={increaseNumberOfCards}>Показать еще</button>
 
     </div>
-
 
   );
 }

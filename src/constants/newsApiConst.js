@@ -1,0 +1,10 @@
+const NUMBER_OF_DAYS_TO_SEARCH = 7;
+const NUMBER_OF_ARTICLES_REQUESTED = 25;
+const BASE_URL = 'https://newsapi.org/v2/everything';
+const API_KEY = 'fe53d9ff532441ab8258f543f540e2f8';
+export {
+  BASE_URL,
+  API_KEY,
+  NUMBER_OF_DAYS_TO_SEARCH,
+  NUMBER_OF_ARTICLES_REQUESTED
+} 
